@@ -1,39 +1,5 @@
 export const dynamic = "force-dynamic";
 
-async function getProjectId(apiKey: string): Promise<string | null> {
-  const response = await fetch("https://api.deepgram.com/v1/projects", {
-    headers: { Authorization: `Token ${apiKey}` },
-  });
-
-  if (!response.ok) return null;
-
-  const data = (await response.json()) as { projects?: { project_id: string }[] };
-  return data.projects?.[0]?.project_id ?? null;
-}
-
-async function createTemporaryKey(apiKey: string, projectId: string): Promise<string | null> {
-  const response = await fetch(
-    `https://api.deepgram.com/v1/projects/${projectId}/keys`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        comment: "Synthio session key",
-        scopes: ["usage:write"],
-        time_to_live_in_seconds: 60,
-      }),
-    },
-  );
-
-  if (!response.ok) return null;
-
-  const data = (await response.json()) as { key?: string };
-  return data.key ?? null;
-}
-
 export async function GET() {
   const apiKey = process.env.DEEPGRAM_API_KEY;
 
@@ -45,21 +11,31 @@ export async function GET() {
   }
 
   try {
-    const projectId = await getProjectId(apiKey);
+    // Token-based auth: creates an unlimited, short-lived token (no 250/day cap)
+    const response = await fetch("https://api.deepgram.com/v1/auth/grant", {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        time_to_live_in_seconds: 120,
+      }),
+    });
 
-    if (projectId) {
-      const tempKey = await createTemporaryKey(apiKey, projectId);
+    if (response.ok) {
+      const data = (await response.json()) as { access_token?: string };
 
-      if (tempKey) {
-        console.log("[Deepgram] Issued temporary key (60s TTL)");
+      if (data.access_token) {
+        console.log("[Deepgram] Issued temporary token (120s TTL)");
         return Response.json(
-          { token: tempKey },
+          { token: data.access_token },
           { headers: { "Cache-Control": "no-store" } },
         );
       }
     }
 
-    console.warn("[Deepgram] Could not create temporary key, falling back to main key");
+    console.warn("[Deepgram] Token grant failed, falling back to main key");
     return Response.json(
       { token: apiKey },
       { headers: { "Cache-Control": "no-store" } },
