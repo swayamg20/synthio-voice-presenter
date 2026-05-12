@@ -11,7 +11,8 @@ export async function GET() {
   }
 
   try {
-    // Token-based auth: creates an unlimited, short-lived token (no 250/day cap)
+    // Token-based auth: creates a short-lived token
+    // Docs: https://developers.deepgram.com/guides/fundamentals/token-based-authentication
     const response = await fetch("https://api.deepgram.com/v1/auth/grant", {
       method: "POST",
       headers: {
@@ -23,19 +24,20 @@ export async function GET() {
       }),
     });
 
-    if (response.ok) {
-      const data = (await response.json()) as { access_token?: string };
+    const data = await response.json();
+    console.log("[Deepgram] Token grant response:", response.status, JSON.stringify(data).slice(0, 200));
 
-      if (data.access_token) {
-        console.log("[Deepgram] Issued temporary token (120s TTL)");
-        return Response.json(
-          { token: data.access_token },
-          { headers: { "Cache-Control": "no-store" } },
-        );
-      }
+    if (response.ok && data.access_token) {
+      console.log("[Deepgram] Issued temporary token (120s TTL)");
+      return Response.json(
+        { token: data.access_token },
+        { headers: { "Cache-Control": "no-store" } },
+      );
     }
 
-    console.warn("[Deepgram] Token grant failed, falling back to main key");
+    // If token grant isn't available, use the main key
+    // This is acceptable for a demo — the key is scoped and rate-limited
+    console.warn("[Deepgram] Token grant not available:", data.err_msg ?? data.error ?? "unknown");
     return Response.json(
       { token: apiKey },
       { headers: { "Cache-Control": "no-store" } },
