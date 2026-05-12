@@ -455,25 +455,6 @@ export class VoiceOrchestrator {
 
       if (!this.isCurrentOperation(operation.id)) return;
 
-      const contentType = response.headers.get("Content-Type") ?? "";
-
-      // If the response is JSON (error case or old format), handle as fallback
-      if (contentType.includes("application/json")) {
-        const payload = (await response.json()) as { error?: string; narrationText?: string; followUps?: string[] };
-        if (payload.error) throw new Error(payload.error);
-        if (payload.narrationText) {
-          this.currentSpeechText = payload.narrationText;
-          this.currentSpeechType = "narration";
-          this.followUps = payload.followUps ?? [];
-          await this.playSingleTTS(payload.narrationText, operation.id, operation.controller.signal);
-          if (!this.isCurrentOperation(operation.id)) return;
-          this.recordCurrentSpeech(false);
-          this.slidesPresented.add(slideNumber);
-          this.finishSpeech("narration");
-          return;
-        }
-      }
-
       if (!response.body) {
         throw new Error("Narrate response was not a readable stream.");
       }
@@ -593,58 +574,6 @@ export class VoiceOrchestrator {
       }
 
       if (!this.isCurrentOperation(operation.id)) return;
-
-      const contentType = response.headers.get("Content-Type") ?? "";
-
-      // Handle JSON fallback (old format or error)
-      if (contentType.includes("application/json")) {
-        const payload = (await response.json()) as {
-          error?: string;
-          text?: string;
-          toolCalls?: ToolCall[];
-          followUps?: string[];
-          expertiseAssessment?: UserExpertise;
-        };
-        if (payload.error) throw new Error(payload.error);
-
-        const text = payload.text ?? "I can continue from here.";
-        this.followUps = payload.followUps ?? [];
-        if (payload.expertiseAssessment && payload.expertiseAssessment !== this.userExpertise) {
-          this.userExpertise = payload.expertiseAssessment;
-          this.addActivity("think", `Adapting to ${this.userExpertise} level`);
-        }
-
-        const navigatedToSlide = this.applyToolCalls(payload.toolCalls ?? []);
-        const speechType: SpeechType = continueNarration ? "narration" : "answer";
-        const speechState: OrchestratorState = continueNarration ? "narrating" : "responding";
-
-        this.currentSpeechText = text;
-        this.currentSpeechType = speechType;
-        this.currentSpeechSlide = this.currentSlide;
-        this.spokenSoFar = [];
-        this.transcript = "";
-        this.addActivity("respond", continueNarration ? "Continuing narration..." : "Responding...");
-        this.transition(speechState);
-
-        await this.playSingleTTS(text, operation.id, operation.controller.signal);
-        if (!this.isCurrentOperation(operation.id)) return;
-        this.recordCurrentSpeech(false);
-
-        if (pauseIntent) {
-          this.clearAutoAdvanceTimer();
-          this.transcript = "";
-          this.transition("paused");
-          return;
-        }
-
-        if (navigatedToSlide && !continueNarration) {
-          await this.narrate(navigatedToSlide);
-          return;
-        }
-
-        this.finishSpeech(speechType);
-        return;
-      }
 
       if (!response.body) {
         throw new Error("Chat response was not a readable stream.");
@@ -874,42 +803,6 @@ export class VoiceOrchestrator {
       }
       return null;
     }
-  }
-
-  /**
-   * Fallback for when the full text needs to go through a single TTS call.
-   * Used for JSON fallback responses from chat/narrate routes.
-   */
-  private async playSingleTTS(
-    text: string,
-    operationId: number,
-    signal: AbortSignal,
-  ): Promise<void> {
-    this.ensureAudio();
-    this.ttsStreamFinished = false;
-    this.resolvePlaybackComplete = null;
-
-    const playbackComplete = new Promise<void>((resolve) => {
-      this.resolvePlaybackComplete = resolve;
-    });
-
-    // Split into sentences and fire TTS for each
-    const sentences = text
-      .replace(/\s+/g, " ")
-      .trim()
-      .match(/[^.!?]+(?:[.!?]+(?=\s|$)|$)/g)
-      ?.map((s) => s.trim())
-      .filter(Boolean) ?? [text];
-
-    for (const sentence of sentences) {
-      if (signal.aborted || !this.isCurrentOperation(operationId)) return;
-      this.pendingSentences.push(sentence);
-      this.addSpokenText(sentence);
-      this.enqueueSentenceTTS(sentence, operationId, signal);
-    }
-
-    this.markTtsStreamFinished();
-    await playbackComplete;
   }
 
   // ---------- Browser fallback ----------
@@ -1239,7 +1132,7 @@ export class VoiceOrchestrator {
       return;
     }
 
-    console.error("Voice orchestration failed.", error);
+    console.error("[Orchestrator] Voice orchestration failed.", error);
     this.transcript =
       error instanceof Error
         ? error.message

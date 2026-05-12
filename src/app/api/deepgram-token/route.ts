@@ -25,7 +25,6 @@ export async function GET() {
     });
 
     const data = await response.json();
-    console.log("[Deepgram] Token grant response:", response.status, JSON.stringify(data).slice(0, 200));
 
     if (response.ok && data.access_token) {
       console.log("[Deepgram] Issued temporary token (120s TTL)");

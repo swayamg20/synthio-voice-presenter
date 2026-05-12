@@ -1,11 +1,16 @@
-import OpenAI from "openai";
 import type {
   ChatCompletionMessageParam,
 } from "openai/resources/chat/completions";
+import { getOpenAIClient } from "@/lib/openai-client";
 import {
   buildChatSystemPrompt,
   buildContinueSystemPrompt,
 } from "@/lib/prompts";
+import {
+  sseEvent,
+  extractSpokenTextSoFar,
+  extractCompleteSentences,
+} from "@/lib/sse";
 import { toolDefinitions } from "@/lib/tool-registry";
 import type {
   ChatRequest,
@@ -16,23 +21,6 @@ import type {
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-let openai: OpenAI | null = null;
-
-function getOpenAIClient(): OpenAI {
-  if (openai) {
-    return openai;
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured.");
-  }
-
-  openai = new OpenAI({ apiKey });
-  return openai;
-}
 
 function historyToMessages(
   entry: HistoryEntry,
@@ -133,93 +121,6 @@ function getSpokenContext(body: ChatRequest): {
 }
 
 const VALID_EXPERTISE_LEVELS = new Set<UserExpertise>(["beginner", "intermediate", "expert"]);
-
-// ---------- SSE helpers ----------
-
-const textEncoder = new TextEncoder();
-
-function sseEvent(event: string, data: unknown): Uint8Array {
-  return textEncoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-}
-
-// ---------- Sentence extraction from partial JSON ----------
-
-const SPOKEN_TEXT_PREFIXES = ['"spoken_text":"', '"spoken_text": "'];
-
-function findSpokenTextStart(partial: string): number {
-  for (const prefix of SPOKEN_TEXT_PREFIXES) {
-    const idx = partial.indexOf(prefix);
-    if (idx !== -1) {
-      return idx + prefix.length;
-    }
-  }
-  return -1;
-}
-
-/**
- * Extract the current spoken_text value from partial JSON arguments.
- * The value starts after "spoken_text":"  and continues until an unescaped quote.
- * Since the JSON is partial (still streaming), we may not have the closing quote yet.
- */
-function extractSpokenTextSoFar(partial: string): string {
-  const valueStart = findSpokenTextStart(partial);
-  if (valueStart === -1) return "";
-
-  // Scan for the end of the string value (unescaped quote)
-  let end = -1;
-  for (let i = valueStart; i < partial.length; i++) {
-    if (partial[i] === '"' && partial[i - 1] !== '\\') {
-      end = i;
-      break;
-    }
-  }
-
-  const raw = end === -1 ? partial.slice(valueStart) : partial.slice(valueStart, end);
-
-  // Unescape JSON string escapes
-  try {
-    return JSON.parse(`"${raw.replace(/$/,'')}"`);
-  } catch {
-    // If JSON.parse fails (partial escape at end), trim the trailing incomplete escape
-    const trimmed = raw.replace(/\\+$/, '');
-    try {
-      return JSON.parse(`"${trimmed}"`);
-    } catch {
-      return trimmed;
-    }
-  }
-}
-
-/**
- * Given the full spoken text so far, extract complete sentences starting from `offset`.
- * Returns the sentences found and the new offset (characters consumed).
- */
-function extractCompleteSentences(
-  text: string,
-  offset: number,
-): { sentences: string[]; newOffset: number } {
-  const remaining = text.slice(offset);
-  const sentences: string[] = [];
-
-  // Match sentences that end with punctuation followed by whitespace or end of text
-  // We only emit sentences that are followed by something else (confirming they're complete)
-  const regex = /[^.!?]*[.!?]+(?=\s)/g;
-  let match: RegExpExecArray | null;
-  let lastEnd = 0;
-
-  while ((match = regex.exec(remaining)) !== null) {
-    const sentence = match[0].trim();
-    if (sentence) {
-      sentences.push(sentence);
-      lastEnd = match.index + match[0].length;
-    }
-  }
-
-  return {
-    sentences,
-    newOffset: offset + lastEnd,
-  };
-}
 
 // ---------- Tool call tracking ----------
 
@@ -435,7 +336,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Failed to generate chat response.", error);
+    console.error("[Chat] Failed to generate chat response.", error);
     return Response.json(
       { error: "Failed to generate chat response." },
       { status: 500 },

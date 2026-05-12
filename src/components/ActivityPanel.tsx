@@ -7,7 +7,6 @@ import type { ActivityEvent, OrchestratorState, UserExpertise } from "@/lib/type
 type ActivityPanelProps = {
   state: OrchestratorState;
   activityLog: ActivityEvent[];
-  currentSentence: string;
   onStart: () => void;
   onMicToggle: () => void;
   waveformRef: RefObject<HTMLCanvasElement | null>;
@@ -98,7 +97,6 @@ const EXPERTISE_LABELS: Record<Exclude<UserExpertise, "unknown">, string> = {
 export function ActivityPanel({
   state,
   activityLog,
-  currentSentence,
   onStart,
   onMicToggle,
   waveformRef,

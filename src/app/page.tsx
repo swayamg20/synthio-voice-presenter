@@ -92,7 +92,6 @@ export default function Home() {
           <ActivityPanel
             state={state}
             activityLog={activityLog}
-            currentSentence={currentSentence}
             onStart={startPresentation}
             onMicToggle={toggleMic}
             waveformRef={waveformRef}

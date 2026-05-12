@@ -10,7 +10,6 @@ import type { RefObject } from "react";
 import { VoiceOrchestrator } from "@/lib/orchestrator";
 import type {
   ActivityEvent,
-  HistoryEntry,
   OrchestratorState,
   UserExpertise,
   Zone,
@@ -19,7 +18,6 @@ import type {
 type UseVoiceSessionResult = {
   state: OrchestratorState;
   currentSlide: number;
-  transcript: string;
   highlightedZone: string | null;
   direction: 1 | -1;
   startPresentation: () => void;
@@ -28,8 +26,6 @@ type UseVoiceSessionResult = {
   prevSlide: () => void;
   toggleMic: () => void;
   waveformRef: RefObject<HTMLCanvasElement | null>;
-  spokenSoFar: string[];
-  conversationHistory: HistoryEntry[];
   currentSentence: string;
   activityLog: ActivityEvent[];
   followUps: string[];
@@ -133,11 +129,8 @@ export function useVoiceSession(): UseVoiceSessionResult {
   const currentSlideRef = useRef(1);
   const [state, setState] = useState<OrchestratorState>("idle");
   const [currentSlide, setCurrentSlide] = useState(1);
-  const [transcript, setTranscript] = useState("");
   const [highlightedZone, setHighlightedZone] = useState<string | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
-  const [spokenSoFar, setSpokenSoFar] = useState<string[]>([]);
-  const [conversationHistory, setConversationHistory] = useState<HistoryEntry[]>([]);
   const [currentSentence, setCurrentSentence] = useState("");
   const [activityLog, setActivityLog] = useState<ActivityEvent[]>([]);
   const [followUps, setFollowUps] = useState<string[]>([]);
@@ -154,10 +147,7 @@ export function useVoiceSession(): UseVoiceSessionResult {
       }
 
       setCurrentSlide(data.currentSlide);
-      setTranscript(data.transcript);
       setHighlightedZone(data.highlightedZone);
-      setSpokenSoFar(data.spokenSoFar);
-      setConversationHistory(data.conversationHistory);
       setCurrentSentence(data.currentSentence);
       setActivityLog(data.activityLog);
       setFollowUps(data.followUps);
@@ -222,7 +212,6 @@ export function useVoiceSession(): UseVoiceSessionResult {
   return {
     state,
     currentSlide,
-    transcript,
     highlightedZone,
     direction,
     startPresentation,
@@ -231,8 +220,6 @@ export function useVoiceSession(): UseVoiceSessionResult {
     prevSlide,
     toggleMic,
     waveformRef,
-    spokenSoFar,
-    conversationHistory,
     currentSentence,
     activityLog,
     followUps,

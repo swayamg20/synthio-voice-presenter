@@ -1,67 +1,8 @@
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 import slides from "./slides";
 
-export type ToolResult =
-  | { type: "navigation"; navigateTo: number }
-  | { type: "highlight"; zoneId: string }
-  | { type: "respond"; spokenText: string; followUps: string[]; expertiseAssessment: string };
-
-// Tool arguments arrive from model-generated JSON, so this public boundary is intentionally loose.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ToolHandler = (args: Record<string, any>) => ToolResult;
-type ToolArgs = Parameters<ToolHandler>[0];
-
 const slideIds = slides.map((slide) => slide.id);
 const zoneIds = slides.flatMap((slide) => slide.zones.map((zone) => zone.id));
-
-function requireIntegerArg(
-  args: ToolArgs,
-  key: string,
-  allowedValues: number[],
-): number {
-  const value = args[key];
-
-  if (!Number.isInteger(value) || !allowedValues.includes(value)) {
-    throw new Error(
-      `Invalid ${key}. Expected one of: ${allowedValues.join(", ")}.`,
-    );
-  }
-
-  return value;
-}
-
-function requireStringArg(
-  args: ToolArgs,
-  key: string,
-  allowedValues: string[],
-): string {
-  const value = args[key];
-
-  if (typeof value !== "string" || !allowedValues.includes(value)) {
-    throw new Error(
-      `Invalid ${key}. Expected one of: ${allowedValues.join(", ")}.`,
-    );
-  }
-
-  return value;
-}
-
-export const toolRegistry: Record<string, ToolHandler> = {
-  navigate_to_slide: (args) => ({
-    type: "navigation",
-    navigateTo: requireIntegerArg(args, "slide_number", slideIds),
-  }),
-  highlight_zone: (args) => ({
-    type: "highlight",
-    zoneId: requireStringArg(args, "zone_id", zoneIds),
-  }),
-  respond: (args) => ({
-    type: "respond" as const,
-    spokenText: args.spoken_text as string,
-    followUps: (args.follow_ups as string[]) || [],
-    expertiseAssessment: args.expertise_assessment as string,
-  }),
-};
 
 const respondToolDefinition: ChatCompletionTool = {
   type: "function",

@@ -88,13 +88,6 @@ export type ChatRequest = {
   };
 };
 
-export type ChatResponse = {
-  text: string;
-  toolCalls: ToolCall[];
-  followUps: string[];
-  expertiseAssessment?: UserExpertise;
-};
-
 export type NarrateRequest = {
   slideNumber: number;
   previousContext?: {
@@ -103,7 +96,3 @@ export type NarrateRequest = {
   };
 };
 
-export type NarrateResponse = {
-  narrationText: string;
-  followUps: string[];
-};
