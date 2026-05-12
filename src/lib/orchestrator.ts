@@ -793,21 +793,47 @@ export class VoiceOrchestrator {
    * Fetches audio from /api/tts and enqueues it for playback.
    * Does NOT await — callers fire-and-forget.
    */
+  // Chain of TTS promises to guarantee sentence-order audio enqueuing.
+  // Each sentence fires its TTS fetch immediately (concurrent), but waits
+  // for the previous sentence's audio to be enqueued before enqueuing its own.
+  private ttsChain: Promise<void> = Promise.resolve();
+
   private enqueueSentenceTTS(
     sentence: string,
     operationId: number,
     signal: AbortSignal,
   ): void {
     this.ttsPendingCount++;
-    // Fire in background — don't block SSE consumption
-    void this.fetchAndEnqueueTTS(sentence, operationId, signal);
+
+    // Fire fetch immediately (concurrent) but get a promise for the audio data
+    const audioPromise = this.fetchTTSAudio(sentence, operationId, signal);
+
+    // Chain the enqueue to maintain order: wait for previous sentence to enqueue,
+    // THEN enqueue this one. Fetches still happen concurrently.
+    this.ttsChain = this.ttsChain.then(async () => {
+      try {
+        const result = await audioPromise;
+        if (!result || !this.isCurrentOperation(operationId) || signal.aborted) return;
+
+        if (result.type === "audio") {
+          await this.audio?.enqueue(result.buffer);
+        } else if (result.type === "fallback") {
+          await this.playBrowserFallback(result.text, signal);
+        }
+      } catch {
+        // Already logged in fetchTTSAudio
+      } finally {
+        this.ttsPendingCount = Math.max(0, this.ttsPendingCount - 1);
+        this.tryResolvePlayback();
+      }
+    });
   }
 
-  private async fetchAndEnqueueTTS(
+  private async fetchTTSAudio(
     sentence: string,
     operationId: number,
     signal: AbortSignal,
-  ): Promise<void> {
+  ): Promise<{ type: "audio"; buffer: ArrayBuffer } | { type: "fallback"; text: string } | null> {
     try {
       this.ensureAudio();
 
@@ -818,36 +844,35 @@ export class VoiceOrchestrator {
         signal,
       });
 
-      if (!this.isCurrentOperation(operationId) || signal.aborted) return;
+      if (!this.isCurrentOperation(operationId) || signal.aborted) return null;
 
       if (!response.ok) {
-        console.warn(`[Orchestrator] TTS failed for sentence: "${sentence.slice(0, 40)}"`);
-        return;
+        console.warn(`[Orchestrator] TTS failed for sentence: "${sentence.slice(0, 60)}"`);
+        return null;
       }
 
       const contentType = response.headers.get("Content-Type") ?? "";
 
       if (contentType.includes("application/json")) {
-        // Browser fallback
         const payload = (await response.json()) as { type?: string; text?: string };
         if (payload.type === "fallback" && payload.text) {
-          await this.playBrowserFallback(payload.text, signal);
+          return { type: "fallback", text: payload.text };
         }
-        return;
+        return null;
       }
 
       if (contentType.startsWith("audio/")) {
-        const audioBuffer = await response.arrayBuffer();
-        if (!this.isCurrentOperation(operationId) || signal.aborted) return;
-        await this.audio?.enqueue(audioBuffer);
+        const buffer = await response.arrayBuffer();
+        if (!this.isCurrentOperation(operationId) || signal.aborted) return null;
+        return { type: "audio", buffer };
       }
+
+      return null;
     } catch (error) {
       if (!isAbortError(error) && !signal.aborted) {
-        console.warn(`[Orchestrator] TTS error for sentence: "${sentence.slice(0, 40)}"`, error);
+        console.warn(`[Orchestrator] TTS error for sentence: "${sentence.slice(0, 60)}"`, error);
       }
-    } finally {
-      this.ttsPendingCount = Math.max(0, this.ttsPendingCount - 1);
-      this.tryResolvePlayback();
+      return null;
     }
   }
 
@@ -1125,6 +1150,7 @@ export class VoiceOrchestrator {
     this.pendingSentences = [];
     this.ttsPendingCount = 0;
     this.ttsStreamFinished = false;
+    this.ttsChain = Promise.resolve();
     this.stopPlayback();
   }
 
