@@ -156,6 +156,7 @@ export class VoiceOrchestrator {
   private muted = false;
   private currentSentence = "";
   private pendingSentences: string[] = [];
+  private ttsPendingCount = 0;
   private activityLog: import("./types").ActivityEvent[] = [];
   private activityIdCounter = 0;
   private followUps: string[] = [];
@@ -797,6 +798,7 @@ export class VoiceOrchestrator {
     operationId: number,
     signal: AbortSignal,
   ): void {
+    this.ttsPendingCount++;
     // Fire in background — don't block SSE consumption
     void this.fetchAndEnqueueTTS(sentence, operationId, signal);
   }
@@ -843,6 +845,9 @@ export class VoiceOrchestrator {
       if (!isAbortError(error) && !signal.aborted) {
         console.warn(`[Orchestrator] TTS error for sentence: "${sentence.slice(0, 40)}"`, error);
       }
+    } finally {
+      this.ttsPendingCount = Math.max(0, this.ttsPendingCount - 1);
+      this.tryResolvePlayback();
     }
   }
 
@@ -1118,6 +1123,8 @@ export class VoiceOrchestrator {
     this.abortController?.abort();
     this.abortController = null;
     this.pendingSentences = [];
+    this.ttsPendingCount = 0;
+    this.ttsStreamFinished = false;
     this.stopPlayback();
   }
 
@@ -1133,8 +1140,11 @@ export class VoiceOrchestrator {
 
   private markTtsStreamFinished(): void {
     this.ttsStreamFinished = true;
+    this.tryResolvePlayback();
+  }
 
-    if (!this.audio?.isPlaying) {
+  private tryResolvePlayback(): void {
+    if (this.ttsStreamFinished && this.ttsPendingCount === 0 && !this.audio?.isPlaying) {
       this.resolveCurrentPlayback();
     }
   }
@@ -1152,9 +1162,7 @@ export class VoiceOrchestrator {
 
     this.audio = new AudioPlaybackManager();
     this.audio.onPlaybackComplete = () => {
-      if (this.ttsStreamFinished) {
-        this.resolveCurrentPlayback();
-      }
+      this.tryResolvePlayback();
     };
     this.audio.onBufferStart = () => {
       const next = this.pendingSentences.shift();
