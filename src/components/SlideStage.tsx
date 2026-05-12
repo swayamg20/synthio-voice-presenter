@@ -17,7 +17,6 @@ type SlideStageProps = {
   highlightedZone: string | null;
   onZoneLongPress: (zone: Zone) => void;
   direction: 1 | -1;
-  subtitle: string;
 };
 
 type SlideLayoutProps = {
@@ -69,7 +68,7 @@ function renderLayout({ slide, highlightedZone, onZoneLongPress }: SlideLayoutPr
   }
 }
 
-export function SlideStage({ currentSlide, highlightedZone, onZoneLongPress, direction, subtitle }: SlideStageProps) {
+export function SlideStage({ currentSlide, highlightedZone, onZoneLongPress, direction }: SlideStageProps) {
   return (
     <div
       className="w-full overflow-hidden rounded-lg"
@@ -93,30 +92,6 @@ export function SlideStage({ currentSlide, highlightedZone, onZoneLongPress, dir
           </motion.div>
         </AnimatePresence>
 
-        {/* Movie-style subtitle overlay */}
-        <AnimatePresence mode="wait">
-          {subtitle && (
-            <motion.div
-              key={subtitle}
-              className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center px-8 pb-2"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
-              <p
-                className="max-w-[85%] rounded-md px-4 py-2 text-center font-serif text-[15px] italic leading-relaxed"
-                style={{
-                  backgroundColor: "rgba(24, 24, 27, 0.78)",
-                  color: "#FAFAFA",
-                  backdropFilter: "blur(8px)",
-                }}
-              >
-                {subtitle}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );

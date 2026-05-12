@@ -212,16 +212,16 @@ export function CardsLayout({
   return (
     <motion.section
       aria-labelledby="cards-layout-title"
-      className="flex h-full w-full flex-col justify-center overflow-hidden px-8 py-8 font-sans sm:px-12 lg:px-20"
+      className="flex h-full w-full flex-col justify-center overflow-hidden px-6 py-5 font-sans sm:px-10 lg:px-16"
       style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)", borderRadius: 12 }}
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={itemVariants} className="mb-10 max-w-4xl">
+      <motion.div variants={itemVariants} className="mb-5 max-w-4xl">
         <h2
           id="cards-layout-title"
-          className="font-serif text-[clamp(2.75rem,5vw,4.9rem)] font-semibold leading-[0.96] tracking-normal"
+          className="font-serif text-[clamp(1.75rem,3.5vw,2.8rem)] font-semibold leading-[0.96] tracking-normal"
         >
           {slide.title}
         </h2>
@@ -246,7 +246,7 @@ export function CardsLayout({
               role="button"
               tabIndex={0}
               aria-label={card.zone.label}
-              className="group relative min-h-[300px] cursor-pointer overflow-hidden rounded-[28px] border p-7 outline-none transition"
+              className="group relative cursor-pointer overflow-hidden rounded-2xl border p-5 outline-none transition"
               style={{
                 background: "#FFFFFF",
                 borderColor: active ? "var(--highlight)" : "var(--border)",
@@ -269,7 +269,7 @@ export function CardsLayout({
                 style={{ backgroundColor: "var(--accent)", opacity: 0.04 + index * 0.015 }}
               />
               <div
-                className="mb-9 flex h-20 w-20 items-center justify-center rounded-2xl border"
+                className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border"
                 style={{
                   backgroundColor: "var(--surface-hover)",
                   borderColor: "var(--border)",
@@ -277,11 +277,11 @@ export function CardsLayout({
               >
                 <CardIcon icon={card.icon} />
               </div>
-              <h3 className="font-serif text-[clamp(1.85rem,2.8vw,2.55rem)] font-semibold leading-none tracking-normal">
+              <h3 className="font-serif text-xl font-semibold leading-tight tracking-normal">
                 {card.title}
               </h3>
               <p
-                className="mt-5 max-w-[24rem] text-base font-medium leading-7 md:text-[1.02rem]"
+                className="mt-2 text-sm font-medium leading-relaxed"
                 style={{ color: "var(--text-secondary)" }}
               >
                 {card.description}
