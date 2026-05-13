@@ -176,7 +176,7 @@ export async function POST(request: Request) {
       messages,
       tools: toolDefinitions,
       tool_choice: "required",
-      temperature: 0.68,
+      temperature: 0.4,
       max_completion_tokens: 650,
       stream: true,
     });

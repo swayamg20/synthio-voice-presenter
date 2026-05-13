@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       ],
       tools: respondOnlyToolDefinitions,
       tool_choice: { type: "function", function: { name: "respond" } },
-      temperature: 0.74,
+      temperature: 0.55,
       max_completion_tokens: 600,
       stream: true,
     });

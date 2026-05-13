@@ -1,5 +1,7 @@
 "use client";
 
+import slides from "@/lib/slides";
+
 type SlideIndicatorsProps = {
   currentSlide: number;
   totalSlides: number;
@@ -26,14 +28,17 @@ export function SlideIndicators({ currentSlide, totalSlides, onNext, onPrev }: S
       <div className="flex items-center gap-1.5">
         {Array.from({ length: totalSlides }, (_, i) => {
           const isActive = i + 1 === currentSlide;
+          const slideData = slides[i];
           return (
             <div
               key={i}
+              title={slideData ? `${i + 1}. ${slideData.title}` : undefined}
               className="rounded-full transition-all duration-200"
               style={{
                 width: isActive ? 20 : 6,
                 height: 6,
                 backgroundColor: isActive ? "var(--accent)" : "var(--border-strong)",
+                cursor: "default",
               }}
             />
           );

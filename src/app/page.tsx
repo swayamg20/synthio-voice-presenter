@@ -101,8 +101,8 @@ export default function Home() {
 
         {/* Right — Presentation */}
         <main className="flex flex-1 flex-col overflow-hidden" style={{ backgroundColor: "var(--background)" }}>
-          <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-3">
-            <div className="w-full max-w-5xl">
+          <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-3 py-2">
+            <div className="w-full max-w-6xl">
               <SlideStage
                 currentSlide={slide}
                 highlightedZone={highlightedZone}

@@ -74,7 +74,10 @@ export function SlideStage({ currentSlide, highlightedZone, onZoneLongPress, dir
       className="w-full overflow-hidden rounded-lg"
       style={{
         backgroundColor: "var(--surface)",
-        boxShadow: "0 0 0 1px var(--border), 0 2px 8px rgba(0,0,0,0.04)",
+        border: "1px solid transparent",
+        backgroundClip: "padding-box",
+        boxShadow:
+          "0 0 0 1px var(--border), 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent), 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.03), inset 0 1px 3px rgba(0,0,0,0.04), inset 0 0 12px rgba(0,0,0,0.02)",
       }}
     >
       <div className="relative aspect-video w-full overflow-hidden">
