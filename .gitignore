@@ -1,3 +1,8 @@
+# video files
+*.mov
+*.mp4
+*.webm
+
 # dependencies
 /node_modules
 /.pnp

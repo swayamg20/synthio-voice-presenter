@@ -4,6 +4,8 @@ AI voice presenter that narrates slides, answers questions, and navigates the de
 
 Built as a take-home to explore how voice-based AI interaction can make presentations feel like a dialogue, not a broadcast.
 
+https://github.com/user-attachments/assets/e902b312-2bd6-42cc-91f6-8ff7a409acea
+
 ## Try It
 
 ```bash
