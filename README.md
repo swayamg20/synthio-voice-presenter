@@ -14,6 +14,7 @@ https://github.com/user-attachments/assets/e902b312-2bd6-42cc-91f6-8ff7a409acea
 | Voice Interruption | Speak anytime to interrupt; AI stops instantly and responds |
 | Slide Navigation | Ask about any topic and the AI navigates to the right slide |
 | Diagram Interaction | Long-press any SVG element for a focused explanation with highlighting |
+| Auto Highlighting | Ask about a concept and the AI highlights the relevant diagram element automatically |
 | Streaming Pipeline | TTS fires per-sentence as LLM generates (~500ms, not 3-8s) |
 | Structured Tool Calling | Every response via `respond()` tool with strict JSON schema |
 | Follow-up Chips | Contextual questions appear after each response, clickable |
