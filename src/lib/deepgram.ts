@@ -244,7 +244,7 @@ export function createDeepgramConnection(
       const client = createClient(token);
       const liveSocket = (await client.listen.v1.connect({
         Authorization: token,
-        model: "nova-2",
+        model: "nova-3",
         language: "en",
         smart_format: "true",
         endpointing: 1500,

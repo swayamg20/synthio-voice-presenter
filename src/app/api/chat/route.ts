@@ -264,7 +264,24 @@ export async function POST(request: Request) {
                   controller.enqueue(sseEvent("sentence", { text: remainingText }));
                 }
               } catch (error) {
-                console.warn("[Chat] Failed to parse respond tool arguments.", error);
+                console.warn(
+                  `[Chat] Failed to parse respond tool arguments. Raw (first 200 chars): "${tc.arguments.slice(0, 200)}"`,
+                  error,
+                );
+
+                // Attempt to salvage spoken text from the partial/corrupted JSON
+                // by extracting whatever was already streamed via extractSpokenTextSoFar.
+                const salvaged = extractSpokenTextSoFar(tc.arguments);
+                if (salvaged.length > 0) {
+                  const remainingText = salvaged.slice(emittedSentenceOffset).trim();
+                  if (remainingText) {
+                    console.log(`[Chat] Salvaged sentence from corrupted JSON: "${remainingText.slice(0, 80)}"`);
+                    controller.enqueue(sseEvent("sentence", { text: remainingText }));
+                  }
+                  // Build a synthetic respondArgs so downstream logic doesn't treat
+                  // this as a missing respond tool (which triggers the fallback loop).
+                  respondArgs = { spoken_text: salvaged, follow_ups: [], expertise_assessment: undefined };
+                }
               }
             } else {
               // Non-respond tool calls (navigate_to_slide, highlight_zone)

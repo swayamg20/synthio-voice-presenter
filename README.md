@@ -177,6 +177,8 @@ npm run dev
 
 Open http://localhost:3000. Click **Start Presentation**. Allow microphone access.
 
+**Use headphones** for the best experience. The browser's echo cancellation can struggle to separate your voice from the AI's audio when using speakers. Production would use WebRTC for hardware-level echo cancellation.
+
 ## Tech Stack
 
 | Layer | Technology |

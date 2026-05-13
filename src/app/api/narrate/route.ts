@@ -110,7 +110,21 @@ export async function POST(request: Request) {
                 controller.enqueue(sseEvent("sentence", { text: remainingText }));
               }
             } catch (error) {
-              console.warn("[Narrate] Failed to parse respond tool arguments.", error);
+              console.warn(
+                `[Narrate] Failed to parse respond tool arguments. Raw (first 200 chars): "${respondArguments.slice(0, 200)}"`,
+                error,
+              );
+
+              // Attempt to salvage spoken text from partial/corrupted JSON
+              const salvaged = extractSpokenTextSoFar(respondArguments);
+              if (salvaged.length > 0) {
+                const remainingText = salvaged.slice(emittedSentenceOffset).trim();
+                if (remainingText) {
+                  console.log(`[Narrate] Salvaged sentence from corrupted JSON: "${remainingText.slice(0, 80)}"`);
+                  controller.enqueue(sseEvent("sentence", { text: remainingText }));
+                }
+                respondArgs = { spoken_text: salvaged, follow_ups: [] };
+              }
             }
           }
 
@@ -118,13 +132,44 @@ export async function POST(request: Request) {
           if (!respondArgs && messageContent.trim()) {
             console.log(`[Narrate] No respond tool — using message content as speech`);
             controller.enqueue(sseEvent("sentence", { text: messageContent.trim() }));
+            respondArgs = { spoken_text: messageContent.trim(), follow_ups: [] };
           }
 
+          // If still no content, retry with a simple text completion (no tool calling)
           if (!respondArgs && !messageContent.trim() && emittedSentenceOffset === 0) {
-            console.error("[Narrate] OpenAI returned empty narration.");
-            controller.enqueue(
-              sseEvent("error", { message: "Empty narration returned." }),
-            );
+            console.warn("[Narrate] OpenAI returned empty narration — retrying without tool calling.");
+            try {
+              const retryResponse = await getOpenAIClient().chat.completions.create({
+                model: "gpt-5.4-mini",
+                messages: [
+                  { role: "system", content: systemPrompt },
+                  {
+                    role: "user",
+                    content:
+                      "Generate the narration now. Return only the words to be spoken aloud. Do not use any tools — just respond with plain text.",
+                  },
+                ],
+                temperature: 0.55,
+                max_completion_tokens: 600,
+              });
+
+              const retryText = retryResponse.choices[0]?.message?.content?.trim();
+              if (retryText) {
+                console.log(`[Narrate] Retry succeeded: "${retryText.slice(0, 80)}"`);
+                controller.enqueue(sseEvent("sentence", { text: retryText }));
+                respondArgs = { spoken_text: retryText, follow_ups: [] };
+              } else {
+                console.error("[Narrate] Retry also returned empty narration.");
+                controller.enqueue(
+                  sseEvent("error", { message: "Empty narration returned." }),
+                );
+              }
+            } catch (retryError) {
+              console.error("[Narrate] Retry without tools failed.", retryError);
+              controller.enqueue(
+                sseEvent("error", { message: "Empty narration returned." }),
+              );
+            }
           }
 
           const followUps = (respondArgs?.follow_ups as string[]) ?? [];

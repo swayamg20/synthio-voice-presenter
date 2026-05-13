@@ -28,6 +28,7 @@ type Operation = {
 const AUTO_ADVANCE_MS = 5000;
 const HIGHLIGHT_CLEAR_MS = 4000;
 const TOTAL_SLIDES = slides.length;
+const MAX_CONVERSATION_HISTORY = 30;
 
 function now(): number {
   return Date.now();
@@ -668,7 +669,9 @@ export class VoiceOrchestrator {
       if (!this.isCurrentOperation(operation.id)) return;
 
       // If we never transitioned to speech (no sentences came), handle gracefully
+      let wasFallbackOnly = false;
       if (!transitionedToSpeech) {
+        wasFallbackOnly = true;
         const fallbackText = navigatedToSlide
           ? "Sure, let me show you that."
           : "I can continue from here.";
@@ -693,7 +696,16 @@ export class VoiceOrchestrator {
 
       if (!this.isCurrentOperation(operation.id)) return;
 
-      this.recordCurrentSpeech(false);
+      // If this was a fallback-only response (no real LLM speech), don't record
+      // it into conversation history — it pollutes context and causes the LLM
+      // to repeat the same generic pattern on subsequent turns.
+      if (wasFallbackOnly) {
+        console.log("[Orchestrator] Fallback-only response — skipping history record to prevent loop");
+        this.currentSpeechText = "";
+        this.currentSpeechType = null;
+      } else {
+        this.recordCurrentSpeech(false);
+      }
 
       if (pauseIntent) {
         this.clearAutoAdvanceTimer();
@@ -896,7 +908,18 @@ export class VoiceOrchestrator {
 
     this.currentSpeechText = "";
     this.currentSpeechType = null;
+    this.trimConversationHistory();
     this.emit();
+  }
+
+  private trimConversationHistory(): void {
+    if (this.conversationHistory.length > MAX_CONVERSATION_HISTORY) {
+      // Keep the first 2 entries (initial context) and the last 20 entries
+      const first = this.conversationHistory.slice(0, 2);
+      const last = this.conversationHistory.slice(-20);
+      this.conversationHistory = [...first, ...last];
+      console.log(`[Orchestrator] Trimmed conversation history to ${this.conversationHistory.length} entries`);
+    }
   }
 
   private addUserHistory(transcript: string, zone?: Zone): void {
@@ -921,6 +944,7 @@ export class VoiceOrchestrator {
     });
 
     this.lastInteraction = content;
+    this.trimConversationHistory();
     this.emit();
   }
 

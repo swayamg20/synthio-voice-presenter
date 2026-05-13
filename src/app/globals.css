@@ -1,19 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAFAFA;
+  /* Neutrals tinted toward teal (brand hue) */
+  --background: #F8FAFA;
   --surface: #FFFFFF;
-  --surface-hover: #F4F4F5;
-  --surface-alt: #F0FDFA;
-  --border: #E4E4E7;
-  --border-strong: #D4D4D8;
-  --text-primary: #18181B;
-  --text-secondary: #71717A;
-  --text-tertiary: #A1A1AA;
+  --surface-hover: #F2F5F5;
+  --surface-alt: #EEF7F6;
+  --border: #DCE4E3;
+  --border-strong: #C5D1D0;
+  --text-primary: #1A2120;
+  --text-secondary: #5F706E;
+  --text-tertiary: #8FA09E;
+
+  /* Accent: teal */
   --accent: #0D9488;
   --accent-light: #14B8A6;
   --accent-subtle: #CCFBF1;
   --accent-muted: #5EEAD4;
+
+  /* Semantic */
   --highlight: #EF4444;
   --listening: #22C55E;
   --error: #EF4444;
@@ -26,8 +31,6 @@
 
 body {
   background-color: var(--background);
-  background-image: radial-gradient(circle, var(--border) 0.75px, transparent 0.75px);
-  background-size: 24px 24px;
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;

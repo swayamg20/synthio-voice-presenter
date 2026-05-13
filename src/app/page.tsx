@@ -86,7 +86,7 @@ export default function Home() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left — Agent panel */}
         <aside
-          className="flex w-72 flex-shrink-0 flex-col overflow-hidden"
+          className="flex w-64 flex-shrink-0 flex-col overflow-hidden"
           style={{ borderRight: "1px solid var(--border)", backgroundColor: "var(--surface)" }}
         >
           <ActivityPanel
