@@ -6,6 +6,20 @@ Built as a take-home to explore how voice-based AI interaction can make presenta
 
 https://github.com/user-attachments/assets/e902b312-2bd6-42cc-91f6-8ff7a409acea
 
+## What Was Asked
+
+> Build a working prototype of an AI voice application that can present 5-6 slides, auto-change slides based on questions, let the user interrupt, and implement both frontend and backend.
+
+All four requirements are implemented. Beyond those, Synthio adds:
+
+- **Streaming pipeline** — TTS fires per-sentence as the LLM generates, so the user hears a response in ~500ms instead of waiting 3-8s for the full answer
+- **Structured tool calling** — every LLM response goes through a `respond()` tool with a strict JSON schema, making follow-ups and expertise assessment deterministic
+- **Audience adaptation** — the AI detects question complexity and adjusts its language depth automatically
+- **Follow-up chips** — contextual questions appear after each response so the user doesn't have to think of what to ask
+- **Diagram interaction** — long-press any SVG element for a focused explanation with visual highlighting
+- **Resume with context** — say "continue" after interrupting and the AI bridges back using what it already said
+- **Agent activity panel** — transparent step-by-step view of what the AI is doing
+
 ## Try It
 
 ```bash
