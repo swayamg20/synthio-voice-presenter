@@ -48,6 +48,16 @@ Every response goes through a `respond()` tool with a strict schema: `spoken_tex
 
 See [DESIGN_DOC.md](DESIGN_DOC.md) for architecture details, design decisions, and production roadmap.
 
+## What's Next
+
+- **WebRTC via LiveKit** for hardware echo cancellation and LiveKit's turn detection model
+- **Slide import** from PDF/PPTX via vision model, plus user-generated decks from a topic prompt
+- **Memory layer** so the AI remembers past sessions and adapts over time
+- **Multi-language** support for STT, TTS, and narration
+- **Analytics** on which slides get questions, where users interrupt, session depth
+
+Full roadmap in [DESIGN_DOC.md](DESIGN_DOC.md).
+
 ## Tech Stack
 
 | | |
