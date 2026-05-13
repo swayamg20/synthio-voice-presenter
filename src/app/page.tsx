@@ -28,7 +28,7 @@ export default function Home() {
     onFollowUpClick,
   } = useVoiceSession();
 
-  const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [featuresOpen, setFeaturesOpen] = useState(true);
 
   const slide = slides.find((s) => s.id === currentSlide) ?? slides[0];
   const isIdle = state === "idle";

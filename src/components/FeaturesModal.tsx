@@ -9,47 +9,58 @@ interface FeaturesModalProps {
 
 const features = [
   {
-    icon: "🎙️",
-    title: "Voice Narration",
-    description: "AI presents each slide like a live speaker",
+    icon: "▶",
+    title: "Start",
+    description: "Click Start Presentation in the left panel. Allow mic access. Use headphones for best experience.",
+    tag: null,
+  },
+  {
+    icon: "🎙",
+    title: "AI Narration",
+    description: "The AI presents each slide automatically with natural speech, then asks if you have questions before moving on.",
+    tag: "core",
   },
   {
     icon: "✋",
-    title: "Interruption",
-    description: "Start speaking anytime to interrupt the AI",
+    title: "Interrupt Anytime",
+    description: "Just start speaking while the AI is talking. It stops immediately and listens to your question.",
+    tag: "core",
   },
   {
     icon: "🧭",
-    title: "Slide Navigation",
-    description: "Ask to go to any topic and AI navigates",
+    title: "Voice Navigation",
+    description: "Say \"tell me about tool calling\" or \"go to the memory slide\" and the AI navigates to the right slide automatically.",
+    tag: "core",
   },
   {
-    icon: "🔍",
-    title: "Zone Interaction",
-    description:
-      "Long-press (500ms) any diagram element for a deep explanation",
+    icon: "👆",
+    title: "Diagram Interaction",
+    description: "Long-press (hold 500ms) any element in a slide diagram. The AI highlights it with a visual indicator and explains that specific component in detail.",
+    tag: null,
+  },
+  {
+    icon: "🔎",
+    title: "Auto Highlighting",
+    description: "When you ask about a concept on the current slide, the AI automatically highlights the relevant diagram element while explaining it.",
+    tag: null,
   },
   {
     icon: "💬",
-    title: "Smart Follow-ups",
-    description: "Contextual follow-up questions appear as clickable chips",
+    title: "Follow-up Suggestions",
+    description: "After each response, clickable follow-up questions appear below the slide. Click one to ask it instantly.",
+    tag: null,
   },
   {
     icon: "🎯",
     title: "Audience Adaptation",
-    description: "AI adjusts language depth based on your questions",
+    description: "Ask basic questions and the AI simplifies. Ask technical questions and it goes deeper. Adapts automatically.",
+    tag: null,
   },
   {
-    icon: "▶️",
-    title: "Resume",
-    description:
-      'Say "continue" after interrupting to pick up where it left off',
-  },
-  {
-    icon: "⏭️",
-    title: "Auto-advance",
-    description:
-      "Slides advance automatically after 5 seconds if no interaction",
+    icon: "↩",
+    title: "Resume & Continue",
+    description: "After interrupting, say \"continue\" and the AI picks up exactly where it left off.",
+    tag: null,
   },
 ];
 
@@ -64,7 +75,6 @@ export function FeaturesModal({ open, onClose }: FeaturesModalProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          {/* Backdrop */}
           <motion.div
             className="absolute inset-0"
             style={{
@@ -78,7 +88,6 @@ export function FeaturesModal({ open, onClose }: FeaturesModalProps) {
             exit={{ opacity: 0 }}
           />
 
-          {/* Modal card */}
           <motion.div
             className="relative z-10 mx-4 w-full max-w-lg rounded-xl border p-6 shadow-xl"
             style={{
@@ -91,7 +100,6 @@ export function FeaturesModal({ open, onClose }: FeaturesModalProps) {
             transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
             <button
               type="button"
               onClick={onClose}
@@ -106,49 +114,50 @@ export function FeaturesModal({ open, onClose }: FeaturesModalProps) {
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M1 1l12 12M13 1L1 13" />
               </svg>
             </button>
 
-            {/* Title */}
             <h2
-              className="mb-1 font-mono text-sm font-semibold tracking-wide"
+              className="font-serif text-xl font-semibold"
               style={{ color: "var(--text-primary)" }}
             >
-              Features
+              Synthio
             </h2>
             <p
-              className="mb-5 font-mono text-[11px]"
-              style={{ color: "var(--text-tertiary)" }}
+              className="mt-1 text-sm"
+              style={{ color: "var(--text-secondary)" }}
             >
-              Everything Synthio can do during a presentation
+              An AI voice presenter that narrates slides, answers your questions, and navigates the deck conversationally.
             </p>
 
-            {/* Feature list */}
-            <ul className="space-y-3">
+            <div className="mt-5 space-y-3">
               {features.map((feature) => (
-                <li key={feature.title} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-sm"
+                <div key={feature.title} className="flex items-start gap-3">
+                  <span
+                    className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-xs"
                     style={{ backgroundColor: "var(--surface-alt)" }}
                   >
                     {feature.icon}
                   </span>
                   <div className="min-w-0">
-                    <span
-                      className="font-mono text-xs font-medium"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {feature.title}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="font-mono text-xs font-medium"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {feature.title}
+                      </span>
+                      {feature.tag === "core" && (
+                        <span
+                          className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider"
+                          style={{ backgroundColor: "var(--accent-subtle)", color: "var(--accent)" }}
+                        >
+                          core
+                        </span>
+                      )}
+                    </div>
                     <p
                       className="mt-0.5 text-xs leading-relaxed"
                       style={{ color: "var(--text-secondary)" }}
@@ -156,9 +165,18 @@ export function FeaturesModal({ open, onClose }: FeaturesModalProps) {
                       {feature.description}
                     </p>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-6 w-full rounded-md py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+              style={{ backgroundColor: "var(--accent)" }}
+            >
+              Got it, let's start
+            </button>
           </motion.div>
         </motion.div>
       )}
