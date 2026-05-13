@@ -286,13 +286,19 @@ export async function POST(request: Request) {
             controller.enqueue(sseEvent("sentence", { text: messageContent.trim() }));
           }
 
-          // If no respond tool and no content, emit a fallback
+          // If no respond tool and no content, emit a contextual fallback
           if (!respondArgs && !messageContent.trim() && emittedSentenceOffset === 0) {
-            const fallbackText = emittedToolCalls.some(tc => tc.name === "navigate_to_slide")
-              ? "Sure, let me show you that."
-              : emittedToolCalls.some(tc => tc.name === "highlight_zone")
-                ? "Let me point to the specific part of the diagram."
-                : "I can continue from here.";
+            const highlightTool = emittedToolCalls.find(tc => tc.name === "highlight_zone");
+            const navTool = emittedToolCalls.find(tc => tc.name === "navigate_to_slide");
+
+            let fallbackText: string;
+            if (navTool) {
+              fallbackText = `Let me take you to slide ${navTool.args?.slide_number ?? ""} where we cover that.`;
+            } else if (highlightTool) {
+              fallbackText = `Take a look at the ${highlightTool.args?.zone_id?.replace(/_/g, " ") ?? "highlighted"} element on this diagram. It shows the key concept here.`;
+            } else {
+              fallbackText = "Let me continue with the presentation.";
+            }
             controller.enqueue(sseEvent("sentence", { text: fallbackText }));
           }
 
