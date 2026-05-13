@@ -6,19 +6,22 @@ Built as a take-home to explore how voice-based AI interaction can make presenta
 
 https://github.com/user-attachments/assets/e902b312-2bd6-42cc-91f6-8ff7a409acea
 
-## What Was Asked
+## Features
 
-> Build a working prototype of an AI voice application that can present 5-6 slides, auto-change slides based on questions, let the user interrupt, and implement both frontend and backend.
-
-All four requirements are implemented. Beyond those, Synthio adds:
-
-- **Streaming pipeline** — TTS fires per-sentence as the LLM generates, so the user hears a response in ~500ms instead of waiting 3-8s for the full answer
-- **Structured tool calling** — every LLM response goes through a `respond()` tool with a strict JSON schema, making follow-ups and expertise assessment deterministic
-- **Audience adaptation** — the AI detects question complexity and adjusts its language depth automatically
-- **Follow-up chips** — contextual questions appear after each response so the user doesn't have to think of what to ask
-- **Diagram interaction** — long-press any SVG element for a focused explanation with visual highlighting
-- **Resume with context** — say "continue" after interrupting and the AI bridges back using what it already said
-- **Agent activity panel** — transparent step-by-step view of what the AI is doing
+| Feature | Description |
+|---|---|
+| AI Narration | Presents each slide proactively like a conference speaker |
+| Voice Interruption | Speak anytime to interrupt; AI stops instantly and responds |
+| Slide Navigation | Ask about any topic and the AI navigates to the right slide |
+| Diagram Interaction | Long-press any SVG element for a focused explanation with highlighting |
+| Streaming Pipeline | TTS fires per-sentence as LLM generates (~500ms, not 3-8s) |
+| Structured Tool Calling | Every response via `respond()` tool with strict JSON schema |
+| Follow-up Chips | Contextual questions appear after each response, clickable |
+| Audience Adaptation | AI adjusts language depth based on your question complexity |
+| Resume with Context | Say "continue" after interrupting; AI bridges back naturally |
+| Auto-advance | Slides advance after 5s of silence, cancelled by any interaction |
+| Agent Activity Panel | Step-by-step view of what the AI is doing |
+| Subtitle Sync | Sentences appear one at a time, synced with audio playback |
 
 ## Try It
 
