@@ -53,6 +53,7 @@ See [DESIGN_DOC.md](DESIGN_DOC.md) for architecture details, design decisions, a
 | | |
 |---|---|
 | Frontend | Next.js, React, TypeScript, Tailwind, Framer Motion |
+| Backend | Next.js API Routes (SSE streaming, tool calling orchestration) |
 | STT | Deepgram Nova-3 (streaming WebSocket) |
 | LLM | GPT-5.4-mini (SSE streaming, tool calling) |
 | TTS | ElevenLabs Turbo v2.5 |
